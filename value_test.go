@@ -1,7 +1,11 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -50,7 +54,7 @@ func TestEval(t *testing.T) {
 		program, err := Compile(`this.state == "done"`)
 		require.NoError(t, err)
 
-		_, err = Eval(program, []byte(`{not-json`))
+		_, err = program.Eval(nil, []byte(`{not-json`), time.Time{})
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "valid json")
 	})
@@ -59,7 +63,7 @@ func TestEval(t *testing.T) {
 		program, err := Compile(`this.state`)
 		require.NoError(t, err)
 
-		got, err := Eval(program, []byte(`{"state":"done"}`))
+		got, err := program.Eval(nil, []byte(`{"state":"done"}`), time.Time{})
 		require.NoError(t, err)
 		require.Equal(t, "done", got)
 	})

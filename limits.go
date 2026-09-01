@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
@@ -67,9 +70,9 @@ func validateOutput(raw []byte) error {
 	return nil
 }
 
-// ValidateOutput validates one JSON result against the expression output
+// Validate validates one JSON result against the expression output
 // contract, including the 256 KiB size and structural limits.
-func ValidateOutput(raw []byte) error { return validateOutput(raw) }
+func Validate(raw []byte) error { return validateOutput(raw) }
 
 func outputLimitError() error {
 	return fmt.Errorf("expression: output exceeds %d bytes", maxJSONBytes)

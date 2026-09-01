@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
@@ -44,7 +47,7 @@ func TestBool(t *testing.T) {
 			program, err := Compile(tc.source)
 			require.NoError(t, err)
 
-			got, err := Bool(program, []byte(tc.input))
+			got, err := program.Bool([]byte(tc.input))
 			if tc.wantErr {
 				require.Error(t, err)
 				return

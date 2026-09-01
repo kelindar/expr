@@ -7,11 +7,22 @@
     <a href="https://coveralls.io/github/kelindar/expr"><img src="https://coveralls.io/repos/github/kelindar/expr/badge.svg" alt="Coverage"></a>
 </p>
 
+Copyright (c) Roman Atachiants and contributors. All rights reserved.
+Licensed under the MIT license. See [LICENSE](LICENSE).
+
 # Bounded JSON Expressions for Go
 
 This package is a small, deterministic expression evaluator for JSON payloads. It
 is built for services that need user-authored logic over structured data without
 opening the door to arbitrary code, storage access, or network I/O.
+
+This library extends [Expr](https://github.com/expr-lang/expr); it is not a
+standalone expression language. It uses Expr's parser, compiler, VM, and language
+definition, then adds bounded JSON evaluation, deterministic helper packages,
+fixed-time evaluation, and a typed request/result contract. Expr is Copyright
+(c) 2018 Anton Medvedev and is also distributed under the MIT License. See the
+[upstream license](https://github.com/expr-lang/expr/blob/master/LICENSE) and
+[language definition](https://expr-lang.org/docs/language-definition).
 
 Expressions read the input as `this`, optional caller metadata as `context`, and
 a single captured evaluation time. Compilation and evaluation enforce fixed
@@ -39,8 +50,8 @@ resources and events.
   arrays, objects, time, duration, and structured failures.
 - **Fast paths.** Compile-time JSON projection and boolean predicates avoid the
   full VM when the expression shape allows it.
-- **Documented surface.** `Functions()`, `Guide()`, and validation rules describe
-  the callable catalog exposed to authors.
+- **Documented API.** `GetReference()` and `Guide()` describe the callable
+  catalog exposed to authors.
 
 # Installation
 
@@ -57,6 +68,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kelindar/expr"
 )
@@ -67,7 +79,7 @@ func main() {
 		panic(err)
 	}
 
-	value, err := expr.Eval(program, []byte(`{"price": 10}`))
+	value, err := program.Eval(nil, []byte(`{"price": 10}`), time.Time{})
 	if err != nil {
 		panic(err)
 	}
@@ -88,20 +100,47 @@ Successful results use `result.Type` and `result.Out`. Expression failures stay
 inside the envelope with `type: "error"` and a stable failure code such as
 `invalid_input`, `compile_error`, `evaluation_error`, or `limit_exceeded`.
 
-# Evaluation API
+# Public Go API
 
-The root package exposes a small surface:
+The root package keeps the runtime surface small:
 
-- `Compile` parses and optimizes an expression.
-- `Eval`, `EvalWithContext`, `JSON`, `Bool`, and `AppendJSONUnchecked` evaluate a
-  compiled program.
-- `Evaluate` compiles and evaluates one `Request` and returns the typed `Result`
-  envelope.
-- `Functions`, `Guide`, and `Reference` expose the documented callable catalog.
-- `ValidateOutput` checks a JSON result against the output contract.
+| Symbol | Purpose |
+| --- | --- |
+| `Compile(source)` | Parse and optimize an expression once. |
+| `Program.Eval(ctx, input, now)` | Evaluate a compiled program and return a Go value. A zero `now` captures the current UTC time. |
+| `Program.JSON(input)` | Evaluate and return a validated JSON result. |
+| `Program.Bool(input)` | Evaluate a program that must return a boolean. |
+| `Program.AppendJSON(dst, input)` | Evaluate and append the JSON result to an existing buffer. |
+| `Program.Type()` | Return the statically inferred JSON type, or an empty `Type` when dynamic. |
+| `Evaluate(request)` | Compile and evaluate one `Request` into the typed `Result` envelope. |
+| `GetReference()` | Return the machine-readable callable and validation-rule catalog. |
+| `Guide()` | Return the embedded author-facing language guide. |
+| `Validate(raw)` | Check a JSON result against size and structural output limits. |
 
-`Program.JSONType()` reports a statically known JSON Schema result type when the
-compiler can infer one.
+The root types are `Type`, `Program`, `Request`, `Result`, `Failure`,
+`Reference`, and `Function`. `Program.Type()` returns one of `boolean`,
+`string`, `integer`, `number`, `array`, or `object` when the compiler can prove
+the result type. It returns an empty `Type` for dynamic results.
+
+The helper packages also expose their pure Go functions. Their `Options()`
+functions are used to register the same callables in another Expr environment;
+the root `Compile` function registers them automatically.
+
+| Package | Exported functions |
+| --- | --- |
+| `assignment` | `Bucket`, `Options` |
+| `collection` | `Chunk`, `Cumsum`, `Diff`, `Difference`, `Intersection`, `Lag`, `Merge`, `Options`, `Union`, `Zip` |
+| `encoding` | `CanonicalJSON`, `Checksum`, `Hash`, `HexDecode`, `HexEncode`, `Options`, `URLDecode`, `URLEncode` |
+| `network` | `InCIDR`, `NormalizeHostname`, `NormalizeIP`, `NormalizeURL`, `Options` |
+| `numeric` | `Clamp`, `Correlation`, `Covariance`, `Distance`, `Dot`, `Exp`, `Log`, `Norm`, `Normalize`, `Options`, `Quantile`, `RoundTo`, `Similarity`, `Sqrt`, `StdDev`, `Variance` |
+| `text` | `NormalizeUnicode`, `Options`, `RegexFind`, `RegexFindAll`, `RegexReplace`, `RemoveDiacritics` |
+| `validate` | `Is`, `Options`, `Rules` |
+
+The complete expression callable catalog is returned by
+`GetReference().Functions`. The author guide, examples, result types, safety
+limits, and language rules live in [`reference.md`](reference.md). The
+catalog is also available at runtime, so clients can render the exact version
+of the reference they are using.
 
 ## Environment
 
@@ -146,7 +185,7 @@ during compilation:
 | `text` | `regexFind`, `regexReplace`, `normalizeUnicode`, `removeDiacritics` |
 | `validate` | `is`, `matches`, `oneOf`, `allOf`, and related predicates |
 
-`validate` also publishes the rule catalog returned by `Reference()`.
+`validate` also publishes the rule catalog returned by `GetReference()`.
 
 # Package layout
 
@@ -190,4 +229,9 @@ tests before sending a pull request. This library is maintained by
 
 # License
 
-Expr is licensed under the MIT License.
+This extension is licensed under the MIT License. See [LICENSE](LICENSE).
+
+It extends [Expr](https://github.com/expr-lang/expr), Copyright (c) 2018 Anton
+Medvedev, also under the MIT License. The vendored
+[`internal/jcs`](internal/jcs) package retains its upstream Apache 2.0 notice;
+see [`internal/jcs/LICENSE`](internal/jcs/LICENSE).

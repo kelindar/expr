@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 // Package validate provides pure value predicates and a stable rule catalog.
 package validate
 

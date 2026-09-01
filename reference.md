@@ -1,3 +1,6 @@
+<!-- Copyright (c) Roman Atachiants and contributors. All rights reserved. -->
+<!-- Licensed under the MIT license. See LICENSE file in the project root. -->
+
 # Expression reference
 
 An expression is a small, pure calculation. It reads the input as `this` and

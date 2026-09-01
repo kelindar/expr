@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
@@ -45,7 +48,7 @@ func TestCompile(t *testing.T) {
 	t.Run("reports static JSON result types", func(t *testing.T) {
 		for _, tc := range []struct {
 			source string
-			want   string
+			want   Type
 		}{
 			{source: `is(this, "email")`, want: "boolean"},
 			{source: `42`, want: "integer"},
@@ -58,10 +61,10 @@ func TestCompile(t *testing.T) {
 			t.Run(tc.source, func(t *testing.T) {
 				program, err := Compile(tc.source)
 				require.NoError(t, err)
-				assert.Equal(t, tc.want, program.JSONType())
+				assert.Equal(t, tc.want, program.Type())
 			})
 		}
-		assert.Empty(t, (*Program)(nil).JSONType())
+		assert.Empty(t, (*Program)(nil).Type())
 	})
 }
 
@@ -73,7 +76,7 @@ func TestFixtures(t *testing.T) {
 			input, err := json.Marshal(tc.Input)
 			require.NoError(t, err)
 
-			got, err := Bool(program, input)
+			got, err := program.Bool(input)
 			if tc.Error {
 				require.Error(t, err)
 				return
@@ -103,25 +106,25 @@ func TestCompileJSON(t *testing.T) {
 	require.Error(t, err)
 	_, err = Compile("   ")
 	require.Error(t, err)
-	_, err = JSON(nil, nil)
+	_, err = (*Program)(nil).JSON(nil)
 	require.Error(t, err)
-	_, err = AppendJSONUnchecked(nil, nil, nil)
+	_, err = (*Program)(nil).AppendJSON(nil, nil)
 	require.Error(t, err)
 	program, err := Compile(`{copy: this, name: trim(this.name), missing: this.missing, literal: nil}`)
 	require.NoError(t, err)
-	out, err := JSON(program, []byte(`{"name":" Ada "}`))
+	out, err := program.JSON([]byte(`{"name":" Ada "}`))
 	require.NoError(t, err)
 	require.JSONEq(t, `{"copy":{"name":" Ada "},"name":"Ada","missing":null,"literal":null}`, string(out))
-	appended, err := AppendJSONUnchecked([]byte("prefix"), program, []byte(`{"name":" Ada "}`))
+	appended, err := program.AppendJSON([]byte("prefix"), []byte(`{"name":" Ada "}`))
 	require.NoError(t, err)
 	require.Equal(t, "prefix"+string(out), string(appended))
 	program, err = Compile(`{name: trim(this.name)}`)
 	require.NoError(t, err)
-	_, err = JSON(program, []byte(`{}`))
+	_, err = program.JSON([]byte(`{}`))
 	require.Error(t, err)
 	program, err = Compile(`{value: trim(this.value)}`)
 	require.NoError(t, err)
-	_, err = JSON(program, []byte(`{"value":42}`))
+	_, err = program.JSON([]byte(`{"value":42}`))
 	require.Error(t, err)
 	projection := jsonProjection{{key: `"x"`, literal: []byte(`1`)}}
 	_, err = projection.evalValid([]byte(`{"a":1}`))
@@ -142,7 +145,7 @@ func TestLimitsAndNormalization(t *testing.T) {
 	require.Error(t, err)
 	err = validateOutput([]byte(`{`))
 	require.Error(t, err)
-	require.NoError(t, ValidateOutput([]byte(`{"ok":true}`)))
+	require.NoError(t, Validate([]byte(`{"ok":true}`)))
 	for _, value := range []any{nil, true, "x", time.Unix(0, 0), time.Duration(time.Second), jsontext.Value("42"), jsontext.Value("1.5"), int(1), int8(1), int16(1), int32(1), int64(1), uint(1), uint8(1), uint16(1), uint32(1), uint64(1), float32(1), float64(1), []any{1}, map[string]any{"x": 1}, [1]int{1}, [1]string{"x"}, map[string]int{"x": 1}} {
 		_, err := normalizeValue(value, 1, new(int))
 		require.NoError(t, err)
@@ -175,9 +178,9 @@ func TestOutputLimitAtomic(t *testing.T) {
 	require.NoError(t, err)
 	program, err := Compile(`{copy: this}`)
 	require.NoError(t, err)
-	_, err = JSON(program, projectionInput)
+	_, err = program.JSON(projectionInput)
 	require.Error(t, err)
-	appended, err := AppendJSONUnchecked([]byte("prefix"), program, projectionInput)
+	appended, err := program.AppendJSON([]byte("prefix"), projectionInput)
 	require.Error(t, err)
 	require.Equal(t, "prefix", string(appended))
 }
@@ -228,7 +231,7 @@ func TestContractErrors(t *testing.T) {
 }
 
 func TestCatalogAndValue(t *testing.T) {
-	functions := Functions()
+	functions := functions()
 	require.NotEmpty(t, functions)
 	for i := 1; i < len(functions); i++ {
 		require.LessOrEqual(t, functions[i-1].Domain+functions[i-1].Name, functions[i].Domain+functions[i].Name)
@@ -390,14 +393,14 @@ func TestBuiltinContext(t *testing.T) {
 	require.Error(t, err)
 	program, err := Compile(`this.x`)
 	require.NoError(t, err)
-	_, err = EvalWithContext(program, []byte(`{"x":1}`), []byte(`{`))
+	_, err = program.Eval([]byte(`{`), []byte(`{"x":1}`), time.Time{})
 	require.Error(t, err)
-	_, err = EvalWithContext(nil, nil, nil)
+	_, err = (*Program)(nil).Eval(nil, nil, time.Time{})
 	require.Error(t, err)
-	resultRaw, err := JSON(program, []byte(`{"x":1}`))
+	resultRaw, err := program.JSON([]byte(`{"x":1}`))
 	require.NoError(t, err)
 	require.JSONEq(t, `1`, string(resultRaw))
-	appended, err := AppendJSONUnchecked([]byte("p"), program, []byte(`{"x":1}`))
+	appended, err := program.AppendJSON([]byte("p"), []byte(`{"x":1}`))
 	require.NoError(t, err)
 	require.Equal(t, `p1`, string(appended))
 	empty := value{}
@@ -537,23 +540,23 @@ func TestContractLimits(t *testing.T) {
 	_, err = validateInput(append(append([]byte(nil), exactJSON...), 'x'))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "input exceeds")
-	require.NoError(t, ValidateOutput(exactJSON))
+	require.NoError(t, Validate(exactJSON))
 	err = validateOutput(append(append([]byte(nil), exactJSON...), 'x'))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "output exceeds")
-	require.Error(t, ValidateOutput([]byte(`{"key":1,"key":2}`)))
+	require.Error(t, Validate([]byte(`{"key":1,"key":2}`)))
 
 	withinJSONDepth := []byte(strings.Repeat("[", maxNesting-1) + "0" + strings.Repeat("]", maxNesting-1))
-	require.NoError(t, ValidateOutput(withinJSONDepth))
+	require.NoError(t, Validate(withinJSONDepth))
 	tooDeepJSON := []byte(strings.Repeat("[", maxNesting) + "0" + strings.Repeat("]", maxNesting))
-	err = ValidateOutput(tooDeepJSON)
+	err = Validate(tooDeepJSON)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "nesting exceeds")
 
 	withinJSONEntries := []byte("[" + strings.Repeat("0,", maxEntries-1) + "0]")
-	require.NoError(t, ValidateOutput(withinJSONEntries))
+	require.NoError(t, Validate(withinJSONEntries))
 	tooManyJSONEntries := []byte("[" + strings.Repeat("0,", maxEntries) + "0]")
-	err = ValidateOutput(tooManyJSONEntries)
+	err = Validate(tooManyJSONEntries)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "collection entries exceed")
 
@@ -581,7 +584,7 @@ func TestContractLimits(t *testing.T) {
 
 	program, err := Compile(fmt.Sprintf(`repeat("x", %d)`, maxVMMemory+1))
 	require.NoError(t, err)
-	_, err = Eval(program, nil)
+	_, err = program.Eval(nil, nil, time.Time{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "memory budget")
 }
@@ -641,11 +644,11 @@ func TestEnvUsage(t *testing.T) {
 func TestContextEvaluation(t *testing.T) {
 	program, err := Compile(`context["offset"] + this.value`)
 	require.NoError(t, err)
-	got, err := EvalWithContext(program, []byte(`{"value": 2}`), []byte(`{"offset": 3}`))
+	got, err := program.Eval([]byte(`{"offset": 3}`), []byte(`{"value": 2}`), time.Time{})
 	require.NoError(t, err)
 	assert.Equal(t, int64(5), got)
 
-	_, err = EvalWithContext(program, []byte(`{"value": 2}`), []byte(`{`))
+	_, err = program.Eval([]byte(`{`), []byte(`{"value": 2}`), time.Time{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "context")
 }
@@ -674,7 +677,7 @@ func FuzzJSONValidationNoPanic(f *testing.F) {
 		}
 		require.NotPanics(t, func() {
 			_, _ = validateInput([]byte(raw))
-			_ = ValidateOutput([]byte(raw))
+			_ = Validate([]byte(raw))
 		})
 	})
 }
@@ -694,8 +697,8 @@ func FuzzProjectionNoPanic(f *testing.F) {
 			return
 		}
 		require.NotPanics(t, func() {
-			_, _ = JSON(program, []byte(raw))
-			_, _ = AppendJSONUnchecked([]byte("prefix"), program, []byte(raw))
+			_, _ = program.JSON([]byte(raw))
+			_, _ = program.AppendJSON([]byte("prefix"), []byte(raw))
 		})
 	})
 }
@@ -708,10 +711,10 @@ func TestProgramConcurrency(t *testing.T) {
 		t.Run(fmt.Sprintf("input-%d", i), func(t *testing.T) {
 			t.Parallel()
 			input := []byte(fmt.Sprintf(`{"value":%d,"text":" value-%d "}`, i, i))
-			got, err := Eval(program, input)
+			got, err := program.Eval(nil, input, time.Time{})
 			require.NoError(t, err)
 			assert.Equal(t, map[string]any{"value": int64(i * 2), "text": fmt.Sprintf("value-%d", i)}, got)
-			encoded, err := JSON(program, input)
+			encoded, err := program.JSON(input)
 			require.NoError(t, err)
 			assert.JSONEq(t, fmt.Sprintf(`{"value":%d,"text":"value-%d"}`, i*2, i), string(encoded))
 		})

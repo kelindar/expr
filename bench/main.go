@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 // Command bench runs the expression fixture benchmarks.
 package main
 
@@ -78,7 +81,7 @@ func benchmarkCases(runner *bench.B, domain string, cases []fixture.Case, collis
 			continue
 		}
 		runner.Run(benchmarkName(domain, item.Name, collisions), func(_ int) {
-			benchmarkValue, benchmarkErr = engine.Eval(program, input)
+			benchmarkValue, benchmarkErr = program.Eval(nil, input, time.Time{})
 		})
 	}
 }

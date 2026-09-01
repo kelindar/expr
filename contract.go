@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
@@ -57,7 +60,7 @@ func Evaluate(request Request) Result {
 	if err != nil {
 		return failure(compileCode(err), err.Error(), err)
 	}
-	value, err := evalAt(program, input, nil, at)
+	value, err := program.Eval(nil, input, at)
 	if err != nil {
 		return failure(evalCode(err), err.Error(), err)
 	}

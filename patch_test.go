@@ -1,7 +1,11 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
 	"testing"
+	"time"
 
 	"github.com/expr-lang/expr/ast"
 	"github.com/stretchr/testify/require"
@@ -96,7 +100,7 @@ func TestPatcher(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, program)
 
-	got, err := Eval(program, []byte(`{"user":{"profile":{"age":42}}}`))
+	got, err := program.Eval(nil, []byte(`{"user":{"profile":{"age":42}}}`), time.Time{})
 	require.NoError(t, err)
 	require.Equal(t, true, got)
 }
@@ -104,7 +108,7 @@ func TestPatcher(t *testing.T) {
 func TestPatcherSpecialKeys(t *testing.T) {
 	program, err := Compile(`this["a.b"] + this["*"] + this["?"]`)
 	require.NoError(t, err)
-	got, err := Eval(program, []byte(`{"a.b":1,"*":2,"?":3}`))
+	got, err := program.Eval(nil, []byte(`{"a.b":1,"*":2,"?":3}`), time.Time{})
 	require.NoError(t, err)
 	require.Equal(t, int64(6), got)
 }

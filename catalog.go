@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
@@ -445,8 +448,7 @@ func applyFunctionDoc(item Function) Function {
 	return item
 }
 
-// Functions returns the stable language catalog.
-func Functions() []Function {
+func functions() []Function {
 	out := append([]Function(nil), customFunctions...)
 	out = append(out, coreFunctions...)
 	for i := range out {
@@ -486,5 +488,5 @@ func Guide() string {
 
 // GetReference returns the complete reference payload.
 func GetReference() Reference {
-	return Reference{Version: "1.17.8", Upstream: "https://expr-lang.org/docs/language-definition", Guide: Guide(), Functions: Functions(), Rules: validate.Rules()}
+	return Reference{Version: "1.17.8", Upstream: "https://expr-lang.org/docs/language-definition", Guide: Guide(), Functions: functions(), Rules: validate.Rules()}
 }

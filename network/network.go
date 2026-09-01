@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 // Package network provides pure IP, CIDR, URL, and hostname normalization.
 package network
 

@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
@@ -23,7 +26,7 @@ func TestJSON(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.Fast, program.json != nil)
 
-			got, err := JSON(program, []byte(tc.Input))
+			got, err := program.JSON([]byte(tc.Input))
 			if tc.Error {
 				require.Error(t, err)
 				return

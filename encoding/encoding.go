@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 // Package encoding provides stable JSON encoding, hashing, and checksums.
 package encoding
 

@@ -1,3 +1,6 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr_test
 
 import (
@@ -12,8 +15,9 @@ import (
 )
 
 func TestCatalogSource(t *testing.T) {
-	require.NotEmpty(t, engine.Functions())
-	require.NotEmpty(t, engine.Guide())
+	reference := engine.GetReference()
+	require.NotEmpty(t, reference.Functions)
+	require.NotEmpty(t, reference.Guide)
 }
 
 // TestCatalogCoverage keeps the documented custom surface, validation rules,
@@ -26,7 +30,7 @@ func TestCatalogCoverage(t *testing.T) {
 	require.NoError(t, err)
 
 	catalog := make(map[string]int)
-	for _, item := range engine.Functions() {
+	for _, item := range engine.GetReference().Functions {
 		catalog[item.Name]++
 		require.NotEmpty(t, item.Description, item.Name)
 		require.NotEmpty(t, item.Usage, item.Name)

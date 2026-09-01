@@ -1,3 +1,6 @@
+# Copyright (c) Roman Atachiants and contributors. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root.
+
 - name: chunk
   expression: chunk(this.values, 2)
   input: {values: [1, 2, 3]}

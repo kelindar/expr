@@ -1,6 +1,10 @@
+// Copyright (c) Roman Atachiants and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root.
+
 package expr
 
 import (
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 	"fmt"
@@ -38,6 +42,9 @@ var evaluatorPool = sync.Pool{New: func() any {
 	return &vm.VM{MemoryBudget: maxVMMemory}
 }}
 
+// Type is a statically known expression result type.
+type Type string
+
 // Program is a compiled expression program.
 type Program struct {
 	source string
@@ -47,9 +54,9 @@ type Program struct {
 	uses   envUsage
 }
 
-// JSONType returns the statically known JSON Schema type of the result.
+// Type returns the statically known JSON Schema type of the result.
 // An empty string means the expression result is dynamic.
-func (p *Program) JSONType() string {
+func (p *Program) Type() Type {
 	if p == nil || p.prog == nil {
 		return ""
 	}
@@ -59,18 +66,18 @@ func (p *Program) JSONType() string {
 	}
 	switch typ.Kind() {
 	case reflect.Bool:
-		return "boolean"
+		return Type("boolean")
 	case reflect.String:
-		return "string"
+		return Type("string")
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return "integer"
+		return Type("integer")
 	case reflect.Float32, reflect.Float64:
-		return "number"
+		return Type("number")
 	case reflect.Array, reflect.Slice:
-		return "array"
+		return Type("array")
 	case reflect.Map:
-		return "object"
+		return Type("object")
 	default:
 		return ""
 	}
@@ -110,17 +117,17 @@ func options() []expr.Option {
 	return options
 }
 
-// JSON evaluates a compiled expression into JSON.
-func JSON(program *Program, input []byte) ([]byte, error) {
-	if program == nil {
+// JSON evaluates the compiled expression into JSON.
+func (p *Program) JSON(input []byte) ([]byte, error) {
+	if p == nil {
 		return nil, fmt.Errorf("expression: program is required")
 	}
 	input, err := validateInput(input)
 	if err != nil {
 		return nil, err
 	}
-	if program.json != nil {
-		out, err := program.json.evalValid(input)
+	if p.json != nil {
+		out, err := p.json.evalValid(input)
 		if err != errJSONFallback {
 			if err == nil {
 				err = validateOutput(out)
@@ -128,7 +135,7 @@ func JSON(program *Program, input []byte) ([]byte, error) {
 			return out, err
 		}
 	}
-	value, err := Eval(program, input)
+	value, err := p.Eval(nil, input, time.Time{})
 	if err != nil {
 		return nil, err
 	}
@@ -144,18 +151,18 @@ func JSON(program *Program, input []byte) ([]byte, error) {
 	return out, nil
 }
 
-// AppendJSONUnchecked appends trusted JSON evaluation to dst.
-func AppendJSONUnchecked(dst []byte, program *Program, input []byte) ([]byte, error) {
-	if program == nil {
+// AppendJSON evaluates the compiled expression and appends its JSON result to dst.
+func (p *Program) AppendJSON(dst, input []byte) ([]byte, error) {
+	if p == nil {
 		return nil, fmt.Errorf("expression: program is required")
 	}
 	input, err := validateInput(input)
 	if err != nil {
 		return nil, err
 	}
-	if program.json != nil {
+	if p.json != nil {
 		start := len(dst)
-		out, err := program.json.appendValid(dst, input)
+		out, err := p.json.appendValid(dst, input)
 		if err != errJSONFallback {
 			if err != nil {
 				return dst[:start], err
@@ -166,18 +173,19 @@ func AppendJSONUnchecked(dst []byte, program *Program, input []byte) ([]byte, er
 			return out, nil
 		}
 	}
-	out, err := JSON(program, input)
+	out, err := p.JSON(input)
 	return append(dst, out...), err
 }
 
-// Eval evaluates a compiled expression against a JSON payload.
-func Eval(program *Program, input []byte) (any, error) {
-	return EvalWithContext(program, input, nil)
-}
-
-// EvalWithContext evaluates a compiled expression against JSON input and context.
-func EvalWithContext(program *Program, input, context []byte) (any, error) {
-	return evalAt(program, input, context, time.Now().UTC())
+// Eval evaluates the compiled expression against JSON input and context at now.
+// A zero now captures the current UTC time. The context is optional JSON metadata.
+func (p *Program) Eval(ctx, input jsontext.Value, now time.Time) (any, error) {
+	if now.IsZero() {
+		now = time.Now().UTC()
+	} else {
+		now = now.UTC()
+	}
+	return evalAt(p, input, ctx, now)
 }
 
 func evalAt(program *Program, input, context []byte, captured time.Time) (any, error) {
@@ -271,18 +279,18 @@ func releaseEvaluator(runner *vm.VM) {
 	evaluatorPool.Put(runner)
 }
 
-// Bool evaluates a compiled expression and requires a boolean result.
-func Bool(program *Program, input []byte) (bool, error) {
+// Bool evaluates the compiled expression and requires a boolean result.
+func (p *Program) Bool(input []byte) (bool, error) {
 	input, err := validateInput(input)
 	if err != nil {
 		return false, err
 	}
-	if program != nil && program.bool != nil && gjson.ValidBytes(input) {
-		if value, ok := program.bool.eval(input); ok {
+	if p != nil && p.bool != nil && gjson.ValidBytes(input) {
+		if value, ok := p.bool.eval(input); ok {
 			return value, nil
 		}
 	}
-	out, err := Eval(program, input)
+	out, err := p.Eval(nil, input, time.Time{})
 	if err != nil {
 		return false, err
 	}
