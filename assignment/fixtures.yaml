@@ -1,0 +1,5 @@
+- name: bucket
+  expression: bucket(this.value, 10, "checkout")
+  input: {value: user-42}
+  expect: {type: integer, out: 9}
+  benchmark: [bucket]

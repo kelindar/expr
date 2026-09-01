@@ -1,0 +1,35 @@
+- name: hash-string
+  expression: hash(this.value, "sha256")
+  input: {value: hello}
+  expect: {type: string, out: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"}
+  benchmark: [hash]
+- name: hash-json
+  expression: hash(this.value, "sha256")
+  input: {value: {b: 2, a: 1}}
+  expect: {type: string, out: "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"}
+  benchmark: [hash]
+- name: checksum
+  expression: checksum(this.value, "crc32")
+  input: {value: hello}
+  expect: {type: string, out: "3610a686"}
+  benchmark: [checksum]
+- name: hexEncode
+  expression: hexEncode(this.value)
+  input: {value: hi}
+  expect: {type: string, out: "6869"}
+  benchmark: [hexEncode]
+- name: hexDecode
+  expression: hexDecode(this.value)
+  input: {value: "6869"}
+  expect: {type: string, out: hi}
+  benchmark: [hexDecode]
+- name: urlEncode
+  expression: urlEncode(this.value, "query")
+  input: {value: "a b"}
+  expect: {type: string, out: "a+b"}
+  benchmark: [urlEncode]
+- name: urlDecode
+  expression: urlDecode(this.value, "query")
+  input: {value: "a+b"}
+  expect: {type: string, out: "a b"}
+  benchmark: [urlDecode]

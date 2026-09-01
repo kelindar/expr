@@ -1,0 +1,20 @@
+- name: normalizeIP
+  expression: normalizeIP(this.value)
+  input: {value: "192.168.1.1"}
+  expect: {type: string, out: "192.168.1.1"}
+  benchmark: [normalizeIP]
+- name: inCIDR
+  expression: inCIDR(this.ip, "10.0.0.0/8")
+  input: {ip: "10.1.2.3"}
+  expect: {type: boolean, out: true}
+  benchmark: [inCIDR]
+- name: normalizeHostname
+  expression: normalizeHostname(this.value)
+  input: {value: "Example.COM."}
+  expect: {type: string, out: "example.com"}
+  benchmark: [normalizeHostname]
+- name: normalizeURL
+  expression: normalizeURL(this.value)
+  input: {value: "HTTPS://Example.COM:443/a?b=2&a=1#x"}
+  expect: {type: string, out: "https://example.com/a?b=2&a=1#x"}
+  benchmark: [normalizeURL]

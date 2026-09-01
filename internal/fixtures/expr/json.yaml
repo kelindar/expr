@@ -1,0 +1,42 @@
+- name: projection
+  expr: '{name: this.name, active: true, count: 2}'
+  input: '{"name":"Ada"}'
+  expect: '{"active":true,"count":2,"name":"Ada"}'
+  fast: true
+
+- name: root and trim
+  expr: '{copy: this, name: trim(this.name)}'
+  input: '{"name":" Ada "}'
+  expect: '{"copy":{"name":" Ada "},"name":"Ada"}'
+  fast: true
+
+- name: missing path
+  expr: '{name: this.name}'
+  input: '{}'
+  expect: '{"name":null}'
+  fast: true
+
+- name: vm fallback
+  expr: '{label: this.first + " " + this.last}'
+  input: '{"first":"Ada","last":"Lovelace"}'
+  expect: '{"label":"Ada Lovelace"}'
+
+- name: trim fallback error
+  expr: '{name: trim(this.name)}'
+  input: '{}'
+  fast: true
+  error: true
+
+- name: trim non-string fallback error
+  expr: '{value: trim(this.value)}'
+  input: '{"value":42}'
+  fast: true
+  error: true
+
+- name: invalid input
+  expr: '{name: this.name}'
+  input: '{'
+  fast: true
+  error: true
+
+

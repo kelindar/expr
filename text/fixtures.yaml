@@ -1,0 +1,25 @@
+- name: regexFind
+  expression: regexFind(this.value, "(id-[0-9]+)")
+  input: {value: "id-42"}
+  expect: {type: array, out: ["id-42", "id-42"]}
+  benchmark: [regexFind]
+- name: regexFindAll
+  expression: regexFindAll(this.value, "id-[0-9]+")
+  input: {value: "id-1 id-2"}
+  expect: {type: array, out: [["id-1"], ["id-2"]]}
+  benchmark: [regexFindAll]
+- name: regexReplace
+  expression: regexReplace(this.value, "id-([0-9]+)", "item-$1")
+  input: {value: "id-42"}
+  expect: {type: string, out: "item-42"}
+  benchmark: [regexReplace]
+- name: normalizeUnicode
+  expression: normalizeUnicode(this.value, "nfc")
+  input: {value: "e\u0301"}
+  expect: {type: string, out: "é"}
+  benchmark: [normalizeUnicode]
+- name: removeDiacritics
+  expression: removeDiacritics(this.value)
+  input: {value: "Crème brûlée"}
+  expect: {type: string, out: "Creme brulee"}
+  benchmark: [removeDiacritics]

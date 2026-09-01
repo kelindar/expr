@@ -1,0 +1,63 @@
+- name: dot access
+  expr: this.state == "failed"
+  input:
+    state: failed
+  expect: true
+
+- name: nested access
+  expr: this.user.profile.age > 18
+  input:
+    user:
+      profile:
+        age: 42
+  expect: true
+
+- name: missing field
+  expr: this.deletedAt == nil
+  input:
+    state: done
+  expect: true
+
+- name: integer precision
+  expr: this.createdAt == 1716336000123456789
+  input:
+    createdAt: 1716336000123456789
+  expect: true
+
+- name: array access
+  expr: this.items[0].id == "a"
+  input:
+    items:
+      - id: a
+      - id: b
+  expect: true
+
+- name: root json selector
+  expr: json("items.#(state==\"failed\").id") == "b"
+  input:
+    items:
+      - id: a
+        state: done
+      - id: b
+        state: failed
+  expect: true
+
+- name: embedded json selector
+  expr: json(this.raw, "age") == 12
+  input:
+    raw: '{"name":"Roman","age":12}'
+  expect: true
+
+- name: time helper seconds
+  expr: time(this.joinedAt).Before(now() - duration("48h"))
+  input:
+    joinedAt: 1577836800
+  expect: true
+
+- name: non bool
+  expr: this.state
+  input:
+    state: done
+  error: true
+
+

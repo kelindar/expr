@@ -1,0 +1,285 @@
+- name: all
+  expression: 'all([1, 2, 3], # > 0)'
+  expect: {type: boolean, out: true}
+  benchmark: [all]
+- name: none
+  expression: 'none([1, 2, 3], # < 0)'
+  expect: {type: boolean, out: true}
+  benchmark: [none]
+- name: any
+  expression: 'any([1, 2, 3], # > 2)'
+  expect: {type: boolean, out: true}
+  benchmark: [any]
+- name: one
+  expression: 'one([1, 2, 3], # == 2)'
+  expect: {type: boolean, out: true}
+  benchmark: [one]
+- name: filter
+  expression: 'filter([1, 2, 3], # > 1)'
+  expect: {type: array, out: [2, 3]}
+  benchmark: [filter]
+- name: map
+  expression: 'map([1, 2, 3], # * 2)'
+  expect: {type: array, out: [2, 4, 6]}
+  benchmark: [map]
+- name: find
+  expression: 'find([1, 2, 3], # > 1)'
+  expect: {type: integer, out: 2}
+  benchmark: [find]
+- name: findIndex
+  expression: 'findIndex([1, 2, 3], # > 1)'
+  expect: {type: integer, out: 1}
+  benchmark: [findIndex]
+- name: findLast
+  expression: 'findLast([1, 2, 3], # > 1)'
+  expect: {type: integer, out: 3}
+  benchmark: [findLast]
+- name: findLastIndex
+  expression: 'findLastIndex([1, 2, 3], # > 1)'
+  expect: {type: integer, out: 2}
+  benchmark: [findLastIndex]
+- name: count
+  expression: 'count([1, 2, 3], # > 1)'
+  expect: {type: integer, out: 2}
+  benchmark: [count]
+- name: sum
+  expression: sum([1, 2, 3])
+  expect: {type: integer, out: 6}
+  benchmark: [sum]
+- name: groupBy
+  expression: 'groupBy(1..4, # % 2)[0]'
+  expect: {type: array, out: [2, 4]}
+  benchmark: [groupBy]
+- name: sortBy
+  expression: 'sortBy([{id: "b"}, {id: "a"}], .id)[0].id'
+  expect: {type: string, out: a}
+  benchmark: [sortBy]
+- name: reduce
+  expression: 'reduce(1..3, # + #acc, 0)'
+  expect: {type: integer, out: 6}
+  benchmark: [reduce]
+- name: len
+  expression: len("hello")
+  expect: {type: integer, out: 5}
+  benchmark: [len]
+- name: type
+  expression: type(1)
+  expect: {type: string, out: int}
+  benchmark: [type]
+- name: abs
+  expression: abs(-5)
+  expect: {type: integer, out: 5}
+  benchmark: [abs]
+- name: ceil
+  expression: ceil(1.2)
+  expect: {type: number, out: 2}
+  benchmark: [ceil]
+- name: floor
+  expression: floor(1.8)
+  expect: {type: number, out: 1}
+  benchmark: [floor]
+- name: round
+  expression: round(1.5)
+  expect: {type: number, out: 2}
+  benchmark: [round]
+- name: int
+  expression: int("42")
+  expect: {type: integer, out: 42}
+  benchmark: [int]
+- name: float
+  expression: float("1.5")
+  expect: {type: number, out: 1.5}
+  benchmark: [float]
+- name: string
+  expression: string(42)
+  expect: {type: string, out: "42"}
+  benchmark: [string]
+- name: trim
+  expression: trim("  hello  ")
+  expect: {type: string, out: hello}
+  benchmark: [trim]
+- name: trimPrefix
+  expression: trimPrefix("/api/items", "/api")
+  expect: {type: string, out: "/items"}
+  benchmark: [trimPrefix]
+- name: trimSuffix
+  expression: trimSuffix("items.tmp", ".tmp")
+  expect: {type: string, out: items}
+  benchmark: [trimSuffix]
+- name: upper
+  expression: upper("hello")
+  expect: {type: string, out: HELLO}
+  benchmark: [upper]
+- name: lower
+  expression: lower("HELLO")
+  expect: {type: string, out: hello}
+  benchmark: [lower]
+- name: split
+  expression: split("a,b,c", ",")
+  expect: {type: array, out: [a, b, c]}
+  benchmark: [split]
+- name: splitAfter
+  expression: splitAfter("a,b,c", ",")
+  expect: {type: array, out: ["a,", "b,", c]}
+  benchmark: [splitAfter]
+- name: replace
+  expression: replace("a-b", "-", ":")
+  expect: {type: string, out: "a:b"}
+  benchmark: [replace]
+- name: repeat
+  expression: repeat("x", 3)
+  expect: {type: string, out: xxx}
+  benchmark: [repeat]
+- name: join
+  expression: join(["a", "b"], ",")
+  expect: {type: string, out: "a,b"}
+  benchmark: [join]
+- name: indexOf
+  expression: indexOf("abc", "b")
+  expect: {type: integer, out: 1}
+  benchmark: [indexOf]
+- name: lastIndexOf
+  expression: lastIndexOf("abcb", "b")
+  expect: {type: integer, out: 3}
+  benchmark: [lastIndexOf]
+- name: hasPrefix
+  expression: hasPrefix("abc", "a")
+  expect: {type: boolean, out: true}
+  benchmark: [hasPrefix]
+- name: hasSuffix
+  expression: hasSuffix("abc", "c")
+  expect: {type: boolean, out: true}
+  benchmark: [hasSuffix]
+- name: max
+  expression: max([1, 3, 2])
+  expect: {type: integer, out: 3}
+  benchmark: [max]
+- name: min
+  expression: min([1, 3, 2])
+  expect: {type: integer, out: 1}
+  benchmark: [min]
+- name: mean
+  expression: mean([1, 2, 3])
+  expect: {type: number, out: 2}
+  benchmark: [mean]
+- name: median
+  expression: median([1, 3, 2])
+  expect: {type: number, out: 2}
+  benchmark: [median]
+- name: toJSON
+  expression: 'toJSON({a: 1})'
+  expect: {type: string, out: "{\n  \"a\": 1\n}"}
+  benchmark: [toJSON]
+- name: fromJSON
+  expression: 'fromJSON("{\"a\":1}").a'
+  expect: {type: number, out: 1}
+  benchmark: [fromJSON]
+- name: toBase64
+  expression: toBase64("hi")
+  expect: {type: string, out: aGk=}
+  benchmark: [toBase64]
+- name: fromBase64
+  expression: fromBase64("aGk=")
+  expect: {type: string, out: hi}
+  benchmark: [fromBase64]
+- name: now
+  expression: now()
+  at: "2026-08-30T12:00:00Z"
+  expect: {type: time, out: "2026-08-30T12:00:00Z"}
+  benchmark: [now]
+- name: duration
+  expression: duration("5m")
+  expect: {type: duration, out: 5m0s}
+  benchmark: [duration]
+- name: date
+  expression: date("2023-08-14")
+  expect: {type: time, out: "2023-08-14T00:00:00Z"}
+  benchmark: [date]
+- name: timezone
+  expression: timezone("UTC").String()
+  expect: {type: string, out: UTC}
+  benchmark: [timezone]
+- name: first
+  expression: first([1, 2])
+  expect: {type: integer, out: 1}
+  benchmark: [first]
+- name: last
+  expression: last([1, 2])
+  expect: {type: integer, out: 2}
+  benchmark: [last]
+- name: get
+  expression: 'get({a: {b: 2}}, "a").b'
+  expect: {type: integer, out: 2}
+  benchmark: [get]
+- name: take
+  expression: take([1, 2, 3], 2)
+  expect: {type: array, out: [1, 2]}
+  benchmark: [take]
+- name: keys
+  expression: 'sort(keys({a: 1, b: 2}))'
+  expect: {type: array, out: [a, b]}
+  benchmark: [keys]
+- name: values
+  expression: 'sort(values({a: 1, b: 2}))'
+  expect: {type: array, out: [1, 2]}
+  benchmark: [values]
+- name: toPairs
+  expression: 'len(toPairs({a: 1, b: 2}))'
+  expect: {type: integer, out: 2}
+  benchmark: [toPairs]
+- name: fromPairs
+  expression: fromPairs([["a", 1]]).a
+  expect: {type: integer, out: 1}
+  benchmark: [fromPairs]
+- name: reverse
+  expression: reverse([1, 2, 3])
+  expect: {type: array, out: [3, 2, 1]}
+  benchmark: [reverse]
+- name: uniq
+  expression: uniq([1, 1, 2])
+  expect: {type: array, out: [1, 2]}
+  benchmark: [uniq]
+- name: concat
+  expression: concat([1], [2])
+  expect: {type: array, out: [1, 2]}
+  benchmark: [concat]
+- name: flatten
+  expression: flatten([[1], [2, [3]]])
+  expect: {type: array, out: [1, 2, 3]}
+  benchmark: [flatten]
+- name: sort
+  expression: sort([2, 1])
+  expect: {type: array, out: [1, 2]}
+  benchmark: [sort]
+- name: bitnot
+  expression: bitnot(1)
+  expect: {type: integer, out: -2}
+  benchmark: [bitnot]
+- name: bitand
+  expression: bitand(6, 3)
+  expect: {type: integer, out: 2}
+  benchmark: [bitand]
+- name: bitor
+  expression: bitor(4, 1)
+  expect: {type: integer, out: 5}
+  benchmark: [bitor]
+- name: bitxor
+  expression: bitxor(6, 3)
+  expect: {type: integer, out: 5}
+  benchmark: [bitxor]
+- name: bitnand
+  expression: bitnand(7, 3)
+  expect: {type: integer, out: 4}
+  benchmark: [bitnand]
+- name: bitshl
+  expression: bitshl(1, 2)
+  expect: {type: integer, out: 4}
+  benchmark: [bitshl]
+- name: bitshr
+  expression: bitshr(-4, 1)
+  expect: {type: integer, out: -2}
+  benchmark: [bitshr]
+- name: bitushr
+  expression: bitushr(-5, 2)
+  expect: {type: integer, out: 4611686018427387902}
+  benchmark: [bitushr]

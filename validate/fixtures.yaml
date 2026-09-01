@@ -1,0 +1,244 @@
+- name: is
+  expression: is("ready", "string")
+  expect: {type: boolean, out: true}
+  benchmark: [is]
+- name: "null"
+  expression: is(this.value, "null")
+  input: {value: null}
+  expect: {type: boolean, out: true}
+  benchmark: ["null"]
+- name: boolean
+  expression: is(this.value, "boolean")
+  input: {value: true}
+  expect: {type: boolean, out: true}
+  benchmark: [boolean]
+- name: number
+  expression: is(this.value, "number")
+  input: {value: 1.5}
+  expect: {type: boolean, out: true}
+  benchmark: [number]
+- name: integer
+  expression: is(this.value, "integer")
+  input: {value: 2}
+  expect: {type: boolean, out: true}
+  benchmark: [integer]
+- name: string
+  expression: is(this.value, "string")
+  input: {value: hello}
+  expect: {type: boolean, out: true}
+  benchmark: [string]
+- name: array
+  expression: is(this.value, "array")
+  input: {value: [1, 2]}
+  expect: {type: boolean, out: true}
+  benchmark: [array]
+- name: object
+  expression: is(this.value, "object")
+  input: {value: {a: 1}}
+  expect: {type: boolean, out: true}
+  benchmark: [object]
+- name: json
+  expression: is(this.value, "json")
+  input: {value: {a: 1}}
+  expect: {type: boolean, out: true}
+  benchmark: [json]
+- name: base64
+  expression: is(this.value, "base64")
+  input: {value: aGk=}
+  expect: {type: boolean, out: true}
+  benchmark: [base64]
+- name: data-uri
+  expression: is(this.value, "data_uri")
+  input: {value: "data:text/plain,hello"}
+  expect: {type: boolean, out: true}
+  benchmark: [data_uri]
+- name: email
+  expression: is(this.value, "email")
+  input: {value: user@example.com}
+  expect: {type: boolean, out: true}
+  benchmark: [email]
+- name: url
+  expression: is(this.value, "url")
+  input: {value: "https://example.com"}
+  expect: {type: boolean, out: true}
+  benchmark: [url]
+- name: request-url
+  expression: is(this.value, "request_url")
+  input: {value: "https://example.com/a"}
+  expect: {type: boolean, out: true}
+  benchmark: [request_url]
+- name: uri
+  expression: is(this.value, "uri")
+  input: {value: "urn:example:x"}
+  expect: {type: boolean, out: true}
+  benchmark: [uri]
+- name: hex
+  expression: is(this.value, "hex")
+  input: {value: deadbeef}
+  expect: {type: boolean, out: true}
+  benchmark: [hex]
+- name: uuid
+  expression: is(this.value, "uuid")
+  input: {value: "550e8400-e29b-41d4-a716-446655440000"}
+  expect: {type: boolean, out: true}
+  benchmark: [uuid]
+- name: uuid-v1
+  expression: is(this.value, "uuid_v1")
+  input: {value: "550e8400-e29b-11d4-a716-446655440000"}
+  expect: {type: boolean, out: true}
+  benchmark: [uuid_v1]
+- name: uuid-v3
+  expression: is(this.value, "uuid_v3")
+  input: {value: "550e8400-e29b-31d4-a716-446655440000"}
+  expect: {type: boolean, out: true}
+  benchmark: [uuid_v3]
+- name: uuid-v4
+  expression: is(this.value, "uuid_v4")
+  input: {value: "550e8400-e29b-41d4-a716-446655440000"}
+  expect: {type: boolean, out: true}
+  benchmark: [uuid_v4]
+- name: uuid-v5
+  expression: is(this.value, "uuid_v5")
+  input: {value: "550e8400-e29b-51d4-a716-446655440000"}
+  expect: {type: boolean, out: true}
+  benchmark: [uuid_v5]
+- name: mongo-id
+  expression: is(this.value, "mongo_id")
+  input: {value: "507f1f77bcf86cd799439011"}
+  expect: {type: boolean, out: true}
+  benchmark: [mongo_id]
+- name: imei
+  expression: is(this.value, "imei")
+  input: {value: "490154203237518"}
+  expect: {type: boolean, out: true}
+  benchmark: [imei]
+- name: imsi
+  expression: is(this.value, "imsi")
+  input: {value: "310150123456789"}
+  expect: {type: boolean, out: true}
+  benchmark: [imsi]
+- name: ip
+  expression: is(this.value, "ip")
+  input: {value: "10.0.0.1"}
+  expect: {type: boolean, out: true}
+  benchmark: [ip]
+- name: ip-v4
+  expression: is(this.value, "ip_v4")
+  input: {value: "10.0.0.1"}
+  expect: {type: boolean, out: true}
+  benchmark: [ip_v4]
+- name: ip-v6
+  expression: is(this.value, "ip_v6")
+  input: {value: "2001:db8::1"}
+  expect: {type: boolean, out: true}
+  benchmark: [ip_v6]
+- name: cidr
+  expression: is(this.value, "cidr")
+  input: {value: "10.0.0.0/8"}
+  expect: {type: boolean, out: true}
+  benchmark: [cidr]
+- name: dns
+  expression: is(this.value, "dns")
+  input: {value: example.com}
+  expect: {type: boolean, out: true}
+  benchmark: [dns]
+- name: hostname
+  expression: is(this.value, "hostname")
+  input: {value: example.com}
+  expect: {type: boolean, out: true}
+  benchmark: [hostname]
+- name: mac
+  expression: is(this.value, "mac")
+  input: {value: "00:11:22:33:44:55"}
+  expect: {type: boolean, out: true}
+  benchmark: [mac]
+- name: port
+  expression: is(this.value, "port")
+  input: {value: 443}
+  expect: {type: boolean, out: true}
+  benchmark: [port]
+- name: rfc3339
+  expression: is(this.value, "rfc3339")
+  input: {value: "2026-08-30T12:00:00Z"}
+  expect: {type: boolean, out: true}
+  benchmark: [rfc3339]
+- name: rfc3339-without-zone
+  expression: is(this.value, "rfc3339_without_zone")
+  input: {value: "2026-08-30T12:00:00"}
+  expect: {type: boolean, out: true}
+  benchmark: [rfc3339_without_zone]
+- name: semver
+  expression: is(this.value, "semver")
+  input: {value: 1.2.3}
+  expect: {type: boolean, out: true}
+  benchmark: [semver]
+- name: iso-country-2
+  expression: is(this.value, "iso_country_2")
+  input: {value: AE}
+  expect: {type: boolean, out: true}
+  benchmark: [iso_country_2]
+- name: iso-country-3
+  expression: is(this.value, "iso_country_3")
+  input: {value: ARE}
+  expect: {type: boolean, out: true}
+  benchmark: [iso_country_3]
+- name: iso-currency
+  expression: is(this.value, "iso_currency")
+  input: {value: AED}
+  expect: {type: boolean, out: true}
+  benchmark: [iso_currency]
+- name: latitude
+  expression: is(this.value, "latitude")
+  input: {value: 25.2}
+  expect: {type: boolean, out: true}
+  benchmark: [latitude]
+- name: longitude
+  expression: is(this.value, "longitude")
+  input: {value: 55.3}
+  expect: {type: boolean, out: true}
+  benchmark: [longitude]
+- name: hash
+  expression: is(this.value, "hash")
+  input: {value: "0123456789abcdef0123456789abcdef"}
+  expect: {type: boolean, out: true}
+  benchmark: [hash]
+- name: crc32
+  expression: is(this.value, "crc32")
+  input: {value: 3610a686}
+  expect: {type: boolean, out: true}
+  benchmark: [crc32]
+- name: regex-syntax
+  expression: is(this.value, "regex_syntax")
+  input: {value: "[a-z]+"}
+  expect: {type: boolean, out: true}
+  benchmark: [regex_syntax]
+- name: regex
+  expression: is(this.value, "regex")
+  input: {value: "[a-z]+"}
+  expect: {type: boolean, out: true}
+  benchmark: [regex]
+- name: printable-ascii
+  expression: is(this.value, "printable_ascii")
+  input: {value: hello}
+  expect: {type: boolean, out: true}
+  benchmark: [printable_ascii]
+- name: unicode-letter
+  expression: is(this.value, "unicode_letter")
+  input: {value: Привет}
+  expect: {type: boolean, out: true}
+  benchmark: [unicode_letter]
+- name: unicode-digit
+  expression: is(this.value, "unicode_digit")
+  input: {value: "१२३"}
+  expect: {type: boolean, out: true}
+  benchmark: [unicode_digit]
+- name: color
+  expression: is(this.value, "color")
+  input: {value: "#ff00aa"}
+  expect: {type: boolean, out: true}
+  benchmark: [color]
+- name: phone
+  expression: is(this.value, "phone")
+  input: {value: "+971 50 123 4567"}
+  expect: {type: boolean, out: true}
+  benchmark: [phone]

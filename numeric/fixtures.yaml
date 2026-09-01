@@ -1,0 +1,72 @@
+- name: sqrt
+  expression: sqrt(this.value)
+  input: {value: 9}
+  expect: {type: number, out: 3}
+  benchmark: [sqrt]
+- name: exp
+  expression: roundTo(exp(1), 6)
+  expect: {type: number, out: 2.718282}
+  benchmark: [exp]
+- name: clamp
+  expression: clamp(this.value, 0, 1)
+  input: {value: 2}
+  expect: {type: number, out: 1}
+  benchmark: [clamp]
+- name: roundTo
+  expression: roundTo(1.234, 2)
+  expect: {type: number, out: 1.23}
+  benchmark: [roundTo]
+- name: log
+  expression: log(100, 10)
+  expect: {type: number, out: 2}
+  benchmark: [log]
+- name: variance
+  expression: variance(this.values)
+  input: {values: [1, 2, 3]}
+  expect: {type: number, out: 0.6666666666666666}
+  benchmark: [variance]
+- name: stddev
+  expression: roundTo(stddev(this.values), 6)
+  input: {values: [1, 2, 3]}
+  expect: {type: number, out: 0.816497}
+  benchmark: [stddev]
+- name: quantile
+  expression: quantile(this.values, 0.5)
+  input: {values: [1, 2, 3, 4]}
+  expect: {type: number, out: 2}
+  benchmark: [quantile]
+- name: covariance
+  expression: covariance(this.x, this.y)
+  input: {x: [1, 2, 3], y: [2, 4, 6]}
+  expect: {type: number, out: 1.3333333333333333}
+  benchmark: [covariance]
+- name: correlation
+  expression: correlation(this.x, this.y)
+  input: {x: [1, 2, 3], y: [2, 4, 6]}
+  expect: {type: number, out: 1}
+  benchmark: [correlation]
+- name: dot
+  expression: dot(this.x, this.y)
+  input: {x: [1, 2], y: [3, 4]}
+  expect: {type: number, out: 11}
+  benchmark: [dot]
+- name: norm
+  expression: norm(this.x)
+  input: {x: [3, 4]}
+  expect: {type: number, out: 5}
+  benchmark: [norm]
+- name: normalize
+  expression: normalize(this.x)
+  input: {x: [3, 4]}
+  expect: {type: array, out: [0.6, 0.8]}
+  benchmark: [normalize]
+- name: distance
+  expression: distance(this.x, this.y, "manhattan")
+  input: {x: [1, 2], y: [3, 4]}
+  expect: {type: number, out: 4}
+  benchmark: [distance]
+- name: similarity
+  expression: similarity(this.x, this.y, "cosine")
+  input: {x: [1, 0], y: [1, 0]}
+  expect: {type: number, out: 1}
+  benchmark: [similarity]
