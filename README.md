@@ -77,18 +77,16 @@ envelope with a stable type and code such as `invalid_input`, `compile_error`,
 
 The root package contains the evaluator and the request/result contract:
 
-| Symbol | Purpose |
-| --- | --- |
-| `Compile(source)` | Parse and optimize an expression once. |
-| `Program.Eval(ctx, input, now)` | Evaluate a compiled program and return a Go value. A zero `now` captures the current UTC time. |
-| `Program.JSON(input)` | Evaluate and return a validated JSON result. |
-| `Program.Bool(input)` | Evaluate a program that must return a boolean. |
-| `Program.AppendJSON(dst, input)` | Evaluate and append the JSON result to an existing buffer. |
-| `Program.Type()` | Return the statically inferred JSON type, or an empty `Type` when dynamic. |
-| `Evaluate(request)` | Compile and evaluate one `Request` into a typed `Result`. |
-| `GetReference()` | Return the machine-readable callable and validation-rule catalog. |
-| `Guide()` | Return the embedded author guide. |
-| `Validate(raw)` | Check a JSON result against size and structural output limits. |
+- `Compile(source)` parses and optimizes an expression once.
+- `Program.Eval(ctx, input, now)` evaluates a compiled program and returns a Go value. A zero `now` captures the current UTC time.
+- `Program.JSON(input)` evaluates a program and returns validated JSON.
+- `Program.Bool(input)` evaluates a program that must return a boolean.
+- `Program.AppendJSON(dst, input)` evaluates a program and appends the JSON result to an existing buffer.
+- `Program.Type()` returns the statically inferred JSON type, or an empty `Type` when the result is dynamic.
+- `Evaluate(request)` compiles and evaluates one `Request` into a typed `Result`.
+- `GetReference()` returns the machine-readable callable and validation-rule catalog.
+- `Guide()` returns the embedded author guide.
+- `Validate(raw)` checks a JSON result against size and structural output limits.
 
 The root types are `Type`, `Program`, `Request`, `Result`, `Failure`,
 `Reference`, and `Function`. `Program.Type()` returns `boolean`, `string`,
@@ -98,6 +96,10 @@ result type. It returns an empty `Type` for dynamic results.
 The helper packages expose the same operations as pure Go functions. Their
 `Options()` functions register those operations in another Expr environment;
 the root `Compile` function registers them automatically.
+The expression names below map to the exported Go helpers, for example
+`numeric.Sqrt` is available as `sqrt`. Every helper package exports
+`Options()`. `encoding.CanonicalJSON` and `validate.Rules()` are Go-only
+helpers.
 
 ## Expression language
 
@@ -116,97 +118,73 @@ The examples below are complete expressions. They assume the input is in
 
 ### core
 
-| Function | Example |
-| --- | --- |
-| `json(path)` | `json("items.#(state==\"done\")")` |
-| `raw(value)` | `raw(this.payload)` |
-| `time(value)` | `time(this.timestamp)` |
-| `now()` | `now()` |
-| `duration(value)` | `duration("5m")` |
+- `json(path)` reads a JSON path from `this`. Example: `json("items.#(state==\"done\")")`.
+- `raw(value)` returns JSON text. Example: `raw(this.payload)`.
+- `time(value)` converts seconds or nanoseconds to a time value. Example: `time(this.timestamp)`.
+- `now()` returns the captured evaluation instant. Example: `now()`.
+- `duration(value)` parses Go duration text. Example: `duration("5m")`.
 
 ### assignment
 
-| Function | Example |
-| --- | --- |
-| `bucket(value, count, namespace?)` | `bucket(this.user_id, 100, "checkout")` |
+- `bucket(value, count, namespace?)` assigns a deterministic XXH3 bucket. Example: `bucket(this.user_id, 100, "checkout")`.
 
 ### collection
 
-| Function | Example |
-| --- | --- |
-| `chunk(values, size)` | `chunk(this.items, 10)` |
-| `zip(left, right)` | `zip(this.keys, this.values)` |
-| `merge(left, right)` | `merge(this.defaults, this.options)` |
-| `union(left, right)` | `union(this.a, this.b)` |
-| `intersection(left, right)` | `intersection(this.a, this.b)` |
-| `difference(left, right)` | `difference(this.a, this.b)` |
-| `lag(values, periods)` | `lag(this.values, 1)` |
-| `cumsum(values)` | `cumsum(this.values)` |
-| `diff(values)` | `diff(this.values)` |
+- `chunk(values, size)` splits an array into fixed-size chunks. Example: `chunk(this.items, 10)`.
+- `zip(left, right)` combines equal-length arrays pair by pair. Example: `zip(this.keys, this.values)`.
+- `merge(left, right)` shallow-merges maps, with values from `right` taking precedence. Example: `merge(this.defaults, this.options)`.
+- `union(left, right)` returns a stable unique union. Example: `union(this.a, this.b)`.
+- `intersection(left, right)` returns stable values present in both arrays. Example: `intersection(this.a, this.b)`.
+- `difference(left, right)` returns stable values from `left` that are absent from `right`. Example: `difference(this.a, this.b)`.
+- `lag(values, periods)` shifts values and inserts leading nulls. Example: `lag(this.values, 1)`.
+- `cumsum(values)` returns cumulative numeric sums. Example: `cumsum(this.values)`.
+- `diff(values)` returns adjacent numeric differences. Example: `diff(this.values)`.
 
 ### encoding
 
-| Function | Example |
-| --- | --- |
-| `hash(value, algorithm)` | `hash(this.id, "sha256")` |
-| `checksum(value, "crc32")` | `checksum(this.payload, "crc32")` |
-| `hexEncode(value)` | `hexEncode(this.id)` |
-| `hexDecode(value)` | `hexDecode("6869")` |
-| `urlEncode(value, mode)` | `urlEncode(this.query, "query")` |
-| `urlDecode(value, mode)` | `urlDecode(this.query, "query")` |
-
-The Go-only `encoding.CanonicalJSON` helper canonicalizes JSON for callers
-using the package directly. `encoding.Options()` is available when composing
-a separate Expr environment.
+- `hash(value, algorithm)` hashes text or canonical JSON. Example: `hash(this.id, "sha256")`.
+- `checksum(value, "crc32")` calculates a CRC32 IEEE checksum. Example: `checksum(this.payload, "crc32")`.
+- `hexEncode(value)` encodes UTF-8 text as lowercase hexadecimal. Example: `hexEncode(this.id)`.
+- `hexDecode(value)` decodes hexadecimal UTF-8 text. Example: `hexDecode("6869")`.
+- `urlEncode(value, mode)` URL-encodes text in `query` or `path_segment` mode. Example: `urlEncode(this.query, "query")`.
+- `urlDecode(value, mode)` URL-decodes text in `query` or `path_segment` mode. Example: `urlDecode(this.query, "query")`.
 
 ### network
 
-| Function | Example |
-| --- | --- |
-| `normalizeIP(value)` | `normalizeIP(this.ip)` |
-| `inCIDR(ip, cidr)` | `inCIDR(this.ip, "10.0.0.0/8")` |
-| `normalizeURL(value)` | `normalizeURL(this.url)` |
-| `normalizeHostname(value)` | `normalizeHostname(this.host)` |
+- `normalizeIP(value)` normalizes IPv4 or IPv6 text. Example: `normalizeIP(this.ip)`.
+- `inCIDR(ip, cidr)` tests IP membership without network access. Example: `inCIDR(this.ip, "10.0.0.0/8")`.
+- `normalizeURL(value)` normalizes an absolute URL without reordering its query. Example: `normalizeURL(this.url)`.
+- `normalizeHostname(value)` normalizes an IDNA hostname. Example: `normalizeHostname(this.host)`.
 
 ### numeric
 
-| Function | Example |
-| --- | --- |
-| `sqrt(value)` | `sqrt(9)` |
-| `exp(value)` | `exp(1)` |
-| `clamp(value, min, max)` | `clamp(this.score, 0, 1)` |
-| `roundTo(value, places)` | `roundTo(1.234, 2)` |
-| `log(value, base?)` | `log(100, 10)` |
-| `variance(values, method?)` | `variance(this.values)` |
-| `stddev(values, method?)` | `stddev(this.values, "sample")` |
-| `quantile(values, p)` | `quantile(this.values, 0.5)` |
-| `covariance(x, y, method?)` | `covariance(this.x, this.y)` |
-| `correlation(x, y, method?)` | `correlation(this.x, this.y, "spearman")` |
-| `dot(x, y)` | `dot(this.a, this.b)` |
-| `norm(values)` | `norm(this.vector)` |
-| `normalize(values)` | `normalize(this.vector)` |
-| `distance(x, y, method?)` | `distance(this.a, this.b, "manhattan")` |
-| `similarity(x, y, method)` | `similarity(this.a, this.b, "cosine")` |
+- `sqrt(value)` returns the square root of a finite non-negative number. Example: `sqrt(9)`.
+- `exp(value)` returns the natural exponential. Example: `exp(1)`.
+- `clamp(value, min, max)` limits a number to ordered bounds. Example: `clamp(this.score, 0, 1)`.
+- `roundTo(value, places)` rounds to a chosen number of decimal places. Example: `roundTo(1.234, 2)`.
+- `log(value, base?)` returns a natural or base-specific logarithm. Example: `log(100, 10)`.
+- `variance(values, method?)` calculates population or sample variance. Example: `variance(this.values)`.
+- `stddev(values, method?)` calculates population or sample standard deviation. Example: `stddev(this.values, "sample")`.
+- `quantile(values, p)` calculates a linearly interpolated quantile. Example: `quantile(this.values, 0.5)`.
+- `covariance(x, y, method?)` calculates population or sample covariance. Example: `covariance(this.x, this.y)`.
+- `correlation(x, y, method?)` calculates Pearson or Spearman correlation. Example: `correlation(this.x, this.y, "spearman")`.
+- `dot(x, y)` calculates the dot product of equal-length numeric arrays. Example: `dot(this.a, this.b)`.
+- `norm(values)` calculates the L2 norm. Example: `norm(this.vector)`.
+- `normalize(values)` L2-normalizes a numeric array. Example: `normalize(this.vector)`.
+- `distance(x, y, method?)` calculates numeric distance. Example: `distance(this.a, this.b, "manhattan")`.
+- `similarity(x, y, method)` calculates cosine, Jaccard, Hamming, or Levenshtein similarity. Example: `similarity(this.a, this.b, "cosine")`.
 
 ### text
 
-| Function | Example |
-| --- | --- |
-| `regexFind(value, pattern)` | `regexFind(this.text, "(id-[0-9]+)")` |
-| `regexFindAll(value, pattern)` | `regexFindAll(this.text, "id-[0-9]+")` |
-| `regexReplace(value, pattern, replacement)` | `regexReplace(this.text, "foo", "bar")` |
-| `normalizeUnicode(value, form?)` | `normalizeUnicode(this.text)` |
-| `removeDiacritics(value)` | `removeDiacritics(this.name)` |
+- `regexFind(value, pattern)` returns one RE2 match and its groups. Example: `regexFind(this.text, "(id-[0-9]+)")`.
+- `regexFindAll(value, pattern)` returns all RE2 matches and their groups. Example: `regexFindAll(this.text, "id-[0-9]+")`.
+- `regexReplace(value, pattern, replacement)` replaces matches with RE2 capture expansion. Example: `regexReplace(this.text, "foo", "bar")`.
+- `normalizeUnicode(value, form?)` normalizes text as NFC, NFD, NFKC, or NFKD. Example: `normalizeUnicode(this.text)`.
+- `removeDiacritics(value)` removes combining marks and returns NFC text. Example: `removeDiacritics(this.name)`.
 
 ### validate
 
-| Function | Example |
-| --- | --- |
-| `is(value, rule, args...)` | `is(this.email, "email")` |
-
-`validate.Rules()` returns the available rule names and their examples for
-callers using the Go package directly. `validate.Options()` registers `is` in
-a separate Expr environment.
+- `is(value, rule, args...)` applies a named pure validation rule. Example: `is(this.email, "email")`.
 
 The complete callable catalog is available from `GetReference().Functions`.
 [`reference.md`](reference.md) contains the author guide, examples, result
@@ -217,14 +195,12 @@ documented in the [Expr language definition](https://expr-lang.org/docs/language
 
 Every entry point uses the same fixed limits:
 
-| Limit | Value |
-| --- | --- |
-| Expression source | 8 KiB |
-| AST nodes | 1,000 |
-| JSON input and output | 256 KiB each |
-| Collection entries | 10,000 |
-| Nesting depth | 64 |
-| Expr VM memory | 1,000,000 |
+- Expression source is limited to 8 KiB.
+- The AST is limited to 1,000 nodes.
+- JSON input and output are limited to 256 KiB each.
+- Collections are limited to 10,000 entries.
+- Nesting is limited to 64 levels.
+- Expr VM memory is limited to 1,000,000 units.
 
 These limits are not caller-configurable.
 
