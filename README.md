@@ -99,16 +99,6 @@ The helper packages expose the same operations as pure Go functions. Their
 `Options()` functions register those operations in another Expr environment;
 the root `Compile` function registers them automatically.
 
-| Package | Exported functions |
-| --- | --- |
-| `assignment` | `Bucket`, `Options` |
-| `collection` | `Chunk`, `Cumsum`, `Diff`, `Difference`, `Intersection`, `Lag`, `Merge`, `Options`, `Union`, `Zip` |
-| `encoding` | `CanonicalJSON`, `Checksum`, `Hash`, `HexDecode`, `HexEncode`, `Options`, `URLDecode`, `URLEncode` |
-| `network` | `InCIDR`, `NormalizeHostname`, `NormalizeIP`, `NormalizeURL`, `Options` |
-| `numeric` | `Clamp`, `Correlation`, `Covariance`, `Distance`, `Dot`, `Exp`, `Log`, `Norm`, `Normalize`, `Options`, `Quantile`, `RoundTo`, `Similarity`, `Sqrt`, `StdDev`, `Variance` |
-| `text` | `NormalizeUnicode`, `Options`, `RegexFind`, `RegexFindAll`, `RegexReplace`, `RemoveDiacritics` |
-| `validate` | `Is`, `Options`, `Rules` |
-
 ## Expression language
 
 Expressions support literals, arrays, maps, arithmetic, comparisons, Boolean
@@ -120,6 +110,103 @@ helpers:
 - `now()` returns the captured evaluation instant.
 - `json(path)`, `raw(value)`, `time(value)`, and `duration(value)` handle JSON
   and time values.
+
+The examples below are complete expressions. They assume the input is in
+`this`; use `context` when a caller-provided value is needed.
+
+### core
+
+| Function | Example |
+| --- | --- |
+| `json(path)` | `json("items.#(state==\"done\")")` |
+| `raw(value)` | `raw(this.payload)` |
+| `time(value)` | `time(this.timestamp)` |
+| `now()` | `now()` |
+| `duration(value)` | `duration("5m")` |
+
+### assignment
+
+| Function | Example |
+| --- | --- |
+| `bucket(value, count, namespace?)` | `bucket(this.user_id, 100, "checkout")` |
+
+### collection
+
+| Function | Example |
+| --- | --- |
+| `chunk(values, size)` | `chunk(this.items, 10)` |
+| `zip(left, right)` | `zip(this.keys, this.values)` |
+| `merge(left, right)` | `merge(this.defaults, this.options)` |
+| `union(left, right)` | `union(this.a, this.b)` |
+| `intersection(left, right)` | `intersection(this.a, this.b)` |
+| `difference(left, right)` | `difference(this.a, this.b)` |
+| `lag(values, periods)` | `lag(this.values, 1)` |
+| `cumsum(values)` | `cumsum(this.values)` |
+| `diff(values)` | `diff(this.values)` |
+
+### encoding
+
+| Function | Example |
+| --- | --- |
+| `hash(value, algorithm)` | `hash(this.id, "sha256")` |
+| `checksum(value, "crc32")` | `checksum(this.payload, "crc32")` |
+| `hexEncode(value)` | `hexEncode(this.id)` |
+| `hexDecode(value)` | `hexDecode("6869")` |
+| `urlEncode(value, mode)` | `urlEncode(this.query, "query")` |
+| `urlDecode(value, mode)` | `urlDecode(this.query, "query")` |
+
+The Go-only `encoding.CanonicalJSON` helper canonicalizes JSON for callers
+using the package directly. `encoding.Options()` is available when composing
+a separate Expr environment.
+
+### network
+
+| Function | Example |
+| --- | --- |
+| `normalizeIP(value)` | `normalizeIP(this.ip)` |
+| `inCIDR(ip, cidr)` | `inCIDR(this.ip, "10.0.0.0/8")` |
+| `normalizeURL(value)` | `normalizeURL(this.url)` |
+| `normalizeHostname(value)` | `normalizeHostname(this.host)` |
+
+### numeric
+
+| Function | Example |
+| --- | --- |
+| `sqrt(value)` | `sqrt(9)` |
+| `exp(value)` | `exp(1)` |
+| `clamp(value, min, max)` | `clamp(this.score, 0, 1)` |
+| `roundTo(value, places)` | `roundTo(1.234, 2)` |
+| `log(value, base?)` | `log(100, 10)` |
+| `variance(values, method?)` | `variance(this.values)` |
+| `stddev(values, method?)` | `stddev(this.values, "sample")` |
+| `quantile(values, p)` | `quantile(this.values, 0.5)` |
+| `covariance(x, y, method?)` | `covariance(this.x, this.y)` |
+| `correlation(x, y, method?)` | `correlation(this.x, this.y, "spearman")` |
+| `dot(x, y)` | `dot(this.a, this.b)` |
+| `norm(values)` | `norm(this.vector)` |
+| `normalize(values)` | `normalize(this.vector)` |
+| `distance(x, y, method?)` | `distance(this.a, this.b, "manhattan")` |
+| `similarity(x, y, method)` | `similarity(this.a, this.b, "cosine")` |
+
+### text
+
+| Function | Example |
+| --- | --- |
+| `regexFind(value, pattern)` | `regexFind(this.text, "(id-[0-9]+)")` |
+| `regexFindAll(value, pattern)` | `regexFindAll(this.text, "id-[0-9]+")` |
+| `regexReplace(value, pattern, replacement)` | `regexReplace(this.text, "foo", "bar")` |
+| `normalizeUnicode(value, form?)` | `normalizeUnicode(this.text)` |
+| `removeDiacritics(value)` | `removeDiacritics(this.name)` |
+
+### validate
+
+| Function | Example |
+| --- | --- |
+| `is(value, rule, args...)` | `is(this.email, "email")` |
+
+`validate.Rules()` returns the available rule names and their examples for
+callers using the Go package directly. `validate.Options()` registers `is` in
+a separate Expr environment.
 
 The complete callable catalog is available from `GetReference().Functions`.
 [`reference.md`](reference.md) contains the author guide, examples, result
