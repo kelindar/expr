@@ -29,19 +29,6 @@ a single captured evaluation time. Compilation and evaluation enforce fixed
 source, input, output, nesting, and collection limits. The same contract is used
 for direct Go calls and HTTP-style evaluation envelopes.
 
-It fits naturally alongside other Kelindar data libraries:
-
-- [`kelindar/storage`](https://github.com/kelindar/storage) stores typed JSON
-  resources and exposes query filters over stored fields.
-- [`kelindar/column`](https://github.com/kelindar/column) keeps columnar,
-  in-memory collections with bitmap indexes for fast scans.
-- [`kelindar/tile`](https://github.com/kelindar/tile) provides a cache-friendly
-  2D grid for spatial workloads.
-
-`expr` does not read from those stores directly. Instead, callers pass JSON input
-into the evaluator and use the result to filter, transform, score, or route
-resources and events.
-
 - **Bounded.** Fixed limits on source size, AST size, JSON input/output, nesting,
   collection entries, and VM memory.
 - **Deterministic.** No randomness, wall-clock timeouts, files, network, or
