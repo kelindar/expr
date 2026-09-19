@@ -720,3 +720,57 @@ func TestProgramConcurrency(t *testing.T) {
 		})
 	}
 }
+
+func TestEntryValidation(t *testing.T) {
+	for _, source := range []string{`{value: this.value}`, `this.value + 1`, `this.value == 1`} {
+		program, err := Compile(source)
+		require.NoError(t, err)
+		for _, input := range []string{`{`, `{"value":1,"value":2}`, `{"value":1e999}`, strings.Repeat("[", maxNesting) + "0" + strings.Repeat("]", maxNesting)} {
+			_, err = program.JSON([]byte(input))
+			assert.Error(t, err, source)
+			out, err := program.AppendJSON([]byte("prefix"), []byte(input))
+			assert.Error(t, err, source)
+			assert.Nil(t, out, source)
+			_, err = program.Bool([]byte(input))
+			assert.Error(t, err, source)
+		}
+	}
+}
+
+func BenchmarkEvaluation(b *testing.B) {
+	input := []byte(`{"value":42,"items":[1,2,3,4,5],"name":"Ada"}`)
+	for _, source := range []string{`this.value + 1`, `{value: this.value}`, `this.value == 42`} {
+		program, err := Compile(source)
+		require.NoError(b, err)
+		b.Run(source+"/JSON", func(b *testing.B) {
+			b.ReportAllocs()
+			for b.Loop() {
+				_, err := program.JSON(input)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+		b.Run(source+"/AppendJSON", func(b *testing.B) {
+			dst := make([]byte, 0, 256)
+			b.ReportAllocs()
+			for b.Loop() {
+				_, err := program.AppendJSON(dst, input)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+	program, err := Compile(`this.value == 42`)
+	require.NoError(b, err)
+	b.Run("Bool", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			_, err := program.Bool(input)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
