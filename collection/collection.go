@@ -69,7 +69,6 @@ func Intersection(left, right []any) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	seen := make(map[string]struct{})
 	out := make([]any, 0, len(left))
 	for _, value := range left {
 		key, err := key(value)
@@ -79,10 +78,7 @@ func Intersection(left, right []any) ([]any, error) {
 		if _, ok := rightSet[key]; !ok {
 			continue
 		}
-		if _, ok := seen[key]; ok {
-			continue
-		}
-		seen[key] = struct{}{}
+		delete(rightSet, key)
 		out = append(out, value)
 	}
 	return out, nil
@@ -310,6 +306,12 @@ func fn(name string, call func(...any) (any, error)) exprlib.Option {
 }
 
 func array(value any) ([]any, error) {
+	if values, ok := value.([]any); ok {
+		if values == nil {
+			return []any{}, nil
+		}
+		return values, nil
+	}
 	rv := reflect.ValueOf(value)
 	if !rv.IsValid() || (rv.Kind() != reflect.Array && rv.Kind() != reflect.Slice) {
 		return nil, fmt.Errorf("array is required")

@@ -24,7 +24,6 @@ import (
 	"github.com/kelindar/expr/numeric"
 	"github.com/kelindar/expr/text"
 	"github.com/kelindar/expr/validate"
-	"github.com/tidwall/gjson"
 )
 
 const (
@@ -122,11 +121,11 @@ func (p *Program) JSON(input []byte) ([]byte, error) {
 	if p == nil {
 		return nil, fmt.Errorf("expression: program is required")
 	}
-	input, err := validateInput(input)
-	if err != nil {
-		return nil, err
-	}
 	if p.json != nil {
+		input, err := validateInput(input)
+		if err != nil {
+			return nil, err
+		}
 		out, err := p.json.evalValid(input)
 		if err != errJSONFallback {
 			if err == nil {
@@ -285,7 +284,7 @@ func (p *Program) Bool(input []byte) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if p != nil && p.bool != nil && gjson.ValidBytes(input) {
+	if p != nil && p.bool != nil {
 		if value, ok := p.bool.eval(input); ok {
 			return value, nil
 		}

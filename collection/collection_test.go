@@ -81,6 +81,10 @@ func TestConversions(t *testing.T) {
 	got, err := array([2]int{1, 2})
 	require.NoError(t, err)
 	require.Equal(t, []any{1, 2}, got)
+	got, err = array([]any(nil))
+	require.NoError(t, err)
+	assert.NotNil(t, got)
+	assert.Empty(t, got)
 	_, err = array(1)
 	require.Error(t, err)
 	gotMap, err := object(map[string]any{"a": 1})
@@ -127,6 +131,16 @@ func TestConversions(t *testing.T) {
 	}
 	gotNested := comparable(map[string]any{"n": int(1), "a": []any{uint(2)}})
 	require.NotNil(t, gotNested)
+}
+
+func TestCallbackOwnership(t *testing.T) {
+	input := []any{1, 2, 3}
+	output, err := lagFunc(input, 0)
+	require.NoError(t, err)
+	lagged, ok := output.([]any)
+	require.True(t, ok)
+	lagged[0] = 99
+	assert.Equal(t, 1, input[0])
 }
 
 func TestOptions(t *testing.T) {
@@ -185,9 +199,13 @@ func TestCollectionInvariants(t *testing.T) {
 	intersection, err := Intersection(left, right)
 	require.NoError(t, err)
 	assert.Equal(t, []any{2, map[string]any{"a": []any{true}}}, intersection)
+	intersection[0] = 99
+	assert.Equal(t, 2, left[1])
 	difference, err := Difference(left, right)
 	require.NoError(t, err)
 	assert.Equal(t, []any{1}, difference)
+	difference[0] = 99
+	assert.Equal(t, 1, left[0])
 
 	leftObject := map[string]any{"nested": map[string]any{"old": true}}
 	rightObject := map[string]any{"value": 2}
@@ -215,4 +233,48 @@ func TestCollectionInvariants(t *testing.T) {
 	deltas, err := Diff([]any{1, 3.5, 6.5})
 	require.NoError(t, err)
 	assert.Equal(t, []float64{2.5, 3}, deltas)
+}
+
+func BenchmarkArrayAny(b *testing.B) {
+	values := []any{1, 2, 3, 4, 5, 6, 7, 8}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		got, err := array(values)
+		if err != nil {
+			b.Fatal(err)
+		}
+		if len(got) != len(values) {
+			b.Fatal("unexpected array length")
+		}
+	}
+}
+
+func BenchmarkIntersection(b *testing.B) {
+	left := []any{1, 2, 2, 3, 4, 5, 1, 6, 7, 8}
+	right := []any{2.0, 4, 9}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		got, err := Intersection(left, right)
+		if err != nil {
+			b.Fatal(err)
+		}
+		if len(got) != 2 {
+			b.Fatal("unexpected intersection length")
+		}
+	}
+}
+
+func BenchmarkDifference(b *testing.B) {
+	left := []any{1, 2, 2, 3, 4, 5, 1, 6, 7, 8}
+	right := []any{2.0, 4, 9}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		got, err := Difference(left, right)
+		if err != nil {
+			b.Fatal(err)
+		}
+		if len(got) != 6 {
+			b.Fatal("unexpected difference length")
+		}
+	}
 }
